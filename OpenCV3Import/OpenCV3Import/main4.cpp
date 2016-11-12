@@ -4,12 +4,15 @@
 #include "opencv2/highgui/highgui.hpp"
 #include "opencv2/imgproc/imgproc.hpp"
 #include <thread>
+#include <chrono>
+
 
 #include "GRT/GRT.h"
 
 using namespace cv;
 using namespace GRT;
 using namespace std;
+using namespace std::chrono;
 
 
 // https://github.com/nickgillian/grt/blob/master/examples/ClassificationModulesExamples/SVMExample/SVMExample.cpp
@@ -54,6 +57,10 @@ void capThread2(Mat &imgOriginal) {
     
 }
 
+struct XYVV {
+    float x, y;
+    float velX, velY;
+};
 
 int doMagic() {
         
@@ -86,18 +93,33 @@ int doMagic() {
     VectorFloat inputVector(N);
     VectorFloat targetVector(T);
     
+    
+    high_resolution_clock::time_point timex = high_resolution_clock::now();
+    high_resolution_clock::time_point time2;
+    long totalDuration;
+    float frameRate;
+    
+    Mat imgOriginal;
+    capThread(imgOriginal);
+    
     while (true) {
 
         //TODO: blocking function. spawn thread.
         // read a new frame from video.
+        //measure time of capture...
+        high_resolution_clock::time_point time0 = high_resolution_clock::now();
         
-        Mat imgOriginal;
-        Mat imgOriginal2;
         std::thread t1(capThread, std::ref(imgOriginal));
-        std::thread t2(capThread2, std::ref(imgOriginal2));
         
-        t1.join();
-        t2.join();
+        XYVV frame;
+        VectorFloat gesture;
+        extract(imgOriginal
+        
+        //measure time of execution...
+        high_resolution_clock::time_point time1 = high_resolution_clock::now();
+        auto duration = duration_cast<milliseconds>( time1 - time0 ).count();
+//        cout << "Milliseconds to capture: " << duration << endl;
+        //
         
         //Convert the captured frame from BGR to HSV
         Mat imgHSV;
@@ -167,7 +189,7 @@ int doMagic() {
                  break; */
                 
                 
-                cout << "Frame: " << frame_count << endl;
+//                cout << "Frame: " << frame_count << endl;
             }
             else if (frame_count == 1000) {
                 
@@ -227,6 +249,24 @@ int doMagic() {
         
         frame_count++;
         
+
+        //measuring time...
+        time2 = high_resolution_clock::now();
+        auto duration2 = duration_cast<milliseconds>( time2 - time1 ).count();
+        cout << "Milliseconds to calculate stuff after capturing: " << duration2 << endl;
+        
+        // THREAD
+        high_resolution_clock::time_point time3 = high_resolution_clock::now();
+        t1.join();
+        high_resolution_clock::time_point time4 = high_resolution_clock::now();
+        auto duration4 = duration_cast<milliseconds>( time4 - time3 ).count();
+        cout << "join time: " << duration4 << endl;
+        
+        
+        totalDuration = duration_cast<seconds>( time2 - timex ).count();
+        frameRate = float(frame_count) / float(totalDuration);
+        cout << "average frame rate: " << frameRate << endl;
+        
         int key = waitKey(1);
         
         if (key == 27) {
@@ -240,6 +280,7 @@ int doMagic() {
         }
         
     }
+    
     
     return 0;
     
