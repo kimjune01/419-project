@@ -7,7 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		BDCF7E3B1DBFEC57000A5A68 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BDCF7E3A1DBFEC57000A5A68 /* main.cpp */; };
+		9282B0021DD688E4007D04F6 /* main4.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 927263451DD67FB600F32966 /* main4.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -23,6 +23,9 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		9231A4001DD678D500610FF6 /* main3.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = main3.cpp; sourceTree = "<group>"; };
+		927263451DD67FB600F32966 /* main4.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = main4.cpp; sourceTree = "<group>"; };
+		92AE3BD01DC802CA00EEC090 /* main2.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main2.cpp; sourceTree = "<group>"; };
 		BDCF7E371DBFEC57000A5A68 /* OpenCV3Import */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = OpenCV3Import; sourceTree = BUILT_PRODUCTS_DIR; };
 		BDCF7E3A1DBFEC57000A5A68 /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -58,6 +61,9 @@
 			isa = PBXGroup;
 			children = (
 				BDCF7E3A1DBFEC57000A5A68 /* main.cpp */,
+				9231A4001DD678D500610FF6 /* main3.cpp */,
+				927263451DD67FB600F32966 /* main4.cpp */,
+				92AE3BD01DC802CA00EEC090 /* main2.cpp */,
 			);
 			path = OpenCV3Import;
 			sourceTree = "<group>";
@@ -119,7 +125,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				BDCF7E3B1DBFEC57000A5A68 /* main.cpp in Sources */,
+				9282B0021DD688E4007D04F6 /* main4.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -218,8 +224,12 @@
 			buildSettings = {
 				CLANG_CXX_LIBRARY = "compiler-default";
 				CLANG_WARN_DOCUMENTATION_COMMENTS = NO;
-				HEADER_SEARCH_PATHS = /usr/local/include;
+				HEADER_SEARCH_PATHS = (
+					/usr/local/include,
+					/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include,
+				);
 				LIBRARY_SEARCH_PATHS = /usr/local/lib;
+				MACOSX_DEPLOYMENT_TARGET = 10.11;
 				OTHER_LDFLAGS = (
 					"-lopencv_calib3d",
 					"-lopencv_core",
@@ -237,6 +247,7 @@
 					"-lopencv_video",
 					"-lopencv_videoio",
 					"-lopencv_videostab",
+					"-lgrt",
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
@@ -247,8 +258,12 @@
 			buildSettings = {
 				CLANG_CXX_LIBRARY = "compiler-default";
 				CLANG_WARN_DOCUMENTATION_COMMENTS = NO;
-				HEADER_SEARCH_PATHS = /usr/local/include;
+				HEADER_SEARCH_PATHS = (
+					/usr/local/include,
+					/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include,
+				);
 				LIBRARY_SEARCH_PATHS = /usr/local/lib;
+				MACOSX_DEPLOYMENT_TARGET = 10.11;
 				OTHER_LDFLAGS = (
 					"-lopencv_calib3d",
 					"-lopencv_core",
@@ -266,6 +281,7 @@
 					"-lopencv_video",
 					"-lopencv_videoio",
 					"-lopencv_videostab",
+					"-lgrt",
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};

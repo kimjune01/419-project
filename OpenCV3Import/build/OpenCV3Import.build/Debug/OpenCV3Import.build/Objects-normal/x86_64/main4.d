@@ -1,5 +1,5 @@
 dependencies: \
-  /Users/JRod/Desktop/OpenCVTemplate/OpenCV3Import/OpenCV3Import/main.cpp \
+  /Users/JRod/Desktop/OpenCVTemplate/OpenCV3Import/OpenCV3Import/main4.cpp \
   /usr/local/include/opencv2/highgui/highgui.hpp \
   /usr/local/include/opencv2/highgui.hpp \
   /usr/local/include/opencv2/core.hpp \
