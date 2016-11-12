@@ -103,6 +103,22 @@ int doMagic() {
     capThread(imgOriginal);
     
     while (true) {
+        high_resolution_clock::time_point time10 = high_resolution_clock::now();
+
+        cap.read(imgOriginal);
+        
+        high_resolution_clock::time_point time11 = high_resolution_clock::now();
+        auto duration = duration_cast<milliseconds>( time11 - time10 ).count();
+        cout << "Milliseconds to capture: " << duration << endl;
+        totalDuration = duration_cast<seconds>( time11 - timex ).count();
+        frameRate = float(frame_count) / float(totalDuration);
+        cout << "average frame rate: " << frameRate << endl;
+        frame_count++;
+    }
+    
+    return 0;
+    
+    while (true) {
 
         //TODO: blocking function. spawn thread.
         // read a new frame from video.
@@ -113,7 +129,6 @@ int doMagic() {
         
         XYVV frame;
         VectorFloat gesture;
-        extract(imgOriginal
         
         //measure time of execution...
         high_resolution_clock::time_point time1 = high_resolution_clock::now();
