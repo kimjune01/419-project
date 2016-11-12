@@ -5,7 +5,7 @@
 #include "opencv2/imgproc/imgproc.hpp"
 #include <thread>
 #include <chrono>
-
+#include "Normalizer.hpp"
 
 #include "GRT/GRT.h"
 
@@ -30,6 +30,10 @@ int iHighS = 255;
 
 int iLowV = 60;
 int iHighV = 255;
+
+int FRAMES_PER_GESTURE = 100;
+
+Normalizer normalizer;
 
 void capThread(Mat &imgOriginal) {
     
@@ -62,12 +66,184 @@ struct XYVV {
     float velX, velY;
 };
 
-int doMagic() {
+
+const int PAGE_BUFFER_SIZE = 1000;
+
+
+
+
+// initialize precapture window
+int doCapture() {
+    
+    int iLastX = -1;
+    int iLastY = -1;
+    
+    VectorFloat frameFloats = VectorFloat(FRAMES_PER_GESTURE*4 + 1);
+    
+    //Capture a temporary image from the camera
+    Mat imgTmp;
+    cap.read(imgTmp);
+    
+    //Create a black image with the size as the camera output
+    Mat imgLines = Mat::zeros( imgTmp.size(), CV_8UC3 );;
+    
+    // init counter for frames since last movement
+    int frame_counter = 0;
+    int sample_counter = 0;
+    
+    Mat imgOriginal;
+    imgOriginal = imgTmp;
+    
+    bool now_sampling = false;
+    
+    high_resolution_clock::time_point flopTime = high_resolution_clock::now();
+    
+    while (true) {
         
-    int stor_X[1000];
-    int stor_Y[1000];
-    int stor_VX[1000];
-    int stor_VY[1000];
+        
+        //TODO: blocking function. spawn thread.
+        // read a new frame from video.
+        
+        flopTime = high_resolution_clock::now();
+        
+        std::thread t1(capThread, std::ref(imgOriginal));
+
+        
+        //Convert the captured frame from BGR to HSV
+        Mat imgHSV;
+        cvtColor(imgOriginal, imgHSV, COLOR_BGR2HSV);
+        
+        Mat imgThresholded;
+        inRange(imgHSV, Scalar(iLowH, iLowS, iLowV), Scalar(iHighH, iHighS, iHighV), imgThresholded); //Threshold the image
+        
+        //morphological opening (removes small objects from the foreground)
+        erode(imgThresholded, imgThresholded, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)) );
+        dilate( imgThresholded, imgThresholded, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)) );
+        
+        //morphological closing (removes small holes from the foreground)
+        dilate( imgThresholded, imgThresholded, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)) );
+        erode(imgThresholded, imgThresholded, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)) );
+        
+        //Calculate the moments of the thresholded image
+        Moments oMoments = moments(imgThresholded);
+        
+        double dM01 = oMoments.m01;
+        double dM10 = oMoments.m10;
+        double dArea = oMoments.m00;
+        
+        // if the area <= 10000 assume no object in the image
+        // it's because of the noise, the area is not zero
+        if (dArea > 10000) {
+            //calculate the position of the ball
+            int posX = dM10 / dArea;
+            int posY = dM01 / dArea;
+            
+//            flopTime = high_resolution_clock::now();
+            
+            // if < 30 for x frames, then start capture sequence
+            
+            
+            if (now_sampling == true && frame_counter < FRAMES_PER_GESTURE) {
+//                 cout << "FRAME CAPTURE INITIATED" << endl;
+                
+                
+                if (iLastX >= 0 && iLastY >= 0 && posX >= 0 && posY >= 0) {
+                    line(imgLines, Point(posX, posY), Point(iLastX, iLastY), Scalar(0,0,255), 2);
+
+                    //TODO: test boundary times...
+                    high_resolution_clock::time_point tempTime = flopTime;
+                    flopTime = high_resolution_clock::now();
+                    long mSec = duration_cast<milliseconds>( flopTime - tempTime ).count();
+                    if (mSec == 0 || mSec > 100) {
+                        cout << "frame_counter: " << frame_counter << endl;
+                    }
+                    //TODO: record each frame into a gesture vector...
+                    int baseIndex = frame_counter * 4;
+                    frameFloats[baseIndex + 1] = float(posX);
+                    frameFloats[baseIndex + 2] = float(posY);
+                    frameFloats[baseIndex + 3] = float(iLastX - posX)/float(mSec);
+                    frameFloats[baseIndex + 4] = float(iLastY - posY)/float(mSec);
+
+                }
+                                frame_counter++;
+            } else if (frame_counter == FRAMES_PER_GESTURE) {
+                imgLines = Mat::zeros( imgTmp.size(), CV_8UC3 );
+                sample_counter++;
+                frame_counter++;
+                cout << "Finished sampling! :)" << endl;
+                
+                normalizer.normalize(frameFloats);
+                //foo
+                // start write file
+                ofstream myfile;
+                myfile.open ("training.csv", ios::app);
+                
+                // format of 1d vector
+                
+                for (int i = 0; i < 401; i++) {
+                
+                    myfile << frameFloats[i] << " ";
+                
+                }
+                
+                myfile << endl;
+                    
+                myfile.close();
+                
+               
+                
+                //TODO: clear gesture vector...
+            }
+            
+            
+            iLastX = posX;
+            iLastY = posY;
+        }
+        
+        
+        // add lines to image
+         imgOriginal = imgOriginal + imgLines;
+        
+        // generate mirror image
+        cv::Mat dst;
+        cv::flip(imgOriginal,dst,0);
+        Point2f src_center(dst.cols/2.0F, dst.rows/2.0F);
+        cv::Mat rot_matrix = getRotationMatrix2D(src_center, 180.0, 1.0);
+        cv::Mat rotated_img(Size(dst.size().height, dst.size().width), dst.type());
+        warpAffine(dst, rotated_img, rot_matrix, dst.size());
+        
+        
+        imshow("Thresholded Image", imgThresholded); //show the thresholded image
+        
+        imshow("flipped",rotated_img);
+        
+        t1.join();
+        
+        // imshow("Original", imgLines); //show the original image
+        // imshow("Original", imgOriginal); //show the original image
+        
+        int key_press = waitKey(1);
+        
+        if (key_press == 27) {
+            cout << "esc key is pressed by user" << endl;
+            break;
+        }
+        else if (key_press == 32) {
+            now_sampling = true;
+            frame_counter = 0;
+            cout << "capture" << endl;
+        }
+        
+    }
+    
+    return 0;
+}
+
+
+
+int doMagic() {
+    
+    XYVV frameArray[PAGE_BUFFER_SIZE];
     
     int iLastX = -1;
     int iLastY = -1;
@@ -102,17 +278,15 @@ int doMagic() {
     Mat imgOriginal;
     capThread(imgOriginal);
     
+    high_resolution_clock::time_point betweenTime;
+    
+    
+    
     while (true) {
 
-        //TODO: blocking function. spawn thread.
-        // read a new frame from video.
-        //measure time of capture...
         high_resolution_clock::time_point time0 = high_resolution_clock::now();
         
         std::thread t1(capThread, std::ref(imgOriginal));
-        
-        XYVV frame;
-        VectorFloat gesture;
         
         //measure time of execution...
         high_resolution_clock::time_point time1 = high_resolution_clock::now();
@@ -155,30 +329,40 @@ int doMagic() {
             if (iLastX >= 0 && iLastY >= 0 && posX >= 0 && posY >= 0) {
                 line(imgLines, Point(posX, posY), Point(iLastX, iLastY), Scalar(0,0,255), 2);
                 
-                
             }
             
-            // store current frame data
-            stor_X[frame_count] = posX;
-            stor_Y[frame_count] = posY;
-            stor_VX[frame_count] = posX - iLastX;
-            stor_VY[frame_count] = posY - iLastY;
+            high_resolution_clock::time_point beforeT = betweenTime;
+            high_resolution_clock::time_point betweenTime = high_resolution_clock::now();
+            long mSec = duration_cast<milliseconds>( beforeT - betweenTime ).count();;
             
+            // store current frame data
+            frameArray[frame_count].x = posX;
+            frameArray[frame_count].y = posY;
+            frameArray[frame_count].velX = (iLastX - posX)/float(mSec);
+            frameArray[frame_count].velY = (iLastY - posY)/float(mSec);
+            if (iLastX == -1 && iLastY == -1) {
+                frameArray[frame_count].velX = 0;
+                frameArray[frame_count].velY = 0;
+            }
+    
+            
+            // put it into mutable array
+            
+           // cout << "x: "<<frame.x<< " y: "<<frame.y<< " velX: "<<frame.velX<< " velY: "<<frame.velY<< endl;
             
             // copy last 100 frames and output to test pipeline
-            if (frame_count > 98 && frame_count < 1000) {
+            if (frame_count > 98 && frame_count < PAGE_BUFFER_SIZE) {
                 
                 // copy last 100 frames to GRT test vector
                 
-                for (int i=0; i < 100; i++) {
-                    inputVector[i*4] = stor_X[frame_count-99+i];
-                    inputVector[i*4+1] = stor_Y[frame_count-99+i];
-                    inputVector[i*4+2] = stor_VX[frame_count-99+i];
-                    inputVector[i*4+3] = stor_VY[frame_count-99+i];
+                for (int i=0; i < FRAMES_PER_GESTURE; i++) {
+                    inputVector[i*4] = frameArray[frame_count-99+i].x;
+                    inputVector[i*4+1] = frameArray[frame_count-99+i].y;
+                    inputVector[i*4+2] = frameArray[frame_count-99+i].velX;
+                    inputVector[i*4+3] = frameArray[frame_count-99+i].velY;
                 }
                 
-                targetVector[0] = 0;
-                gestureData.addSample(inputVector, targetVector);
+        
                 
                 /*cout << "Saving data to file\n";
                  if( !gestureData.save("RegressionData.csv") ){
@@ -190,28 +374,25 @@ int doMagic() {
                 
 //                cout << "Frame: " << frame_count << endl;
             }
-            else if (frame_count == 1000) {
+            else if (frame_count == PAGE_BUFFER_SIZE) {
                 
-                //copy last 100 frames to first part of page buffer and reset...
+                //copy last FRAMES_PER_GESTURE frames to first part of page buffer and reset...
                 
                 cout << "Resetting frame buffer: " << endl;
                 
-                for (int i=0; i < 100; i++) {
+                for (int i=0; i < FRAMES_PER_GESTURE; i++) {
                     
-                    stor_X[i] = stor_X[901+i];
-                    stor_Y[i] = stor_Y[901+i];
-                    stor_VX[i] = stor_VX[901+i];
-                    stor_VY[i] = stor_VY[901+i];
+                    frameArray[i].x = frameArray[901+i].x;
+                    frameArray[i].y = frameArray[901+i].y;
+                    frameArray[i].velX = frameArray[901+i].velX ;
+                    frameArray[i].velY = frameArray[901+i].velY;
                     
-                    inputVector[i*4] = stor_X[i];
-                    inputVector[i*4+1] = stor_Y[i];
-                    inputVector[i*4+2] = stor_VX[i];
-                    inputVector[i*4+3] = stor_VY[i];
+                    inputVector[i*4] = frameArray[i].x;
+                    inputVector[i*4+1] = frameArray[i].y;
+                    inputVector[i*4+2] = frameArray[i].velX;
+                    inputVector[i*4+3] = frameArray[i].velY;
                     
                 }
-                
-                targetVector[0] = 0;
-                gestureData.addSample(inputVector, targetVector);
                 
                 
                 // reset the frame counter
@@ -309,7 +490,7 @@ int main( int argc, char** argv ) {
     
     
  
-    doMagic();
+    doCapture();
    
     
     return 0;
