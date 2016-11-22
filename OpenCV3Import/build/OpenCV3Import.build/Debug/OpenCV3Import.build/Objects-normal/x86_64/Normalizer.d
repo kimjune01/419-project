@@ -1,6 +1,6 @@
 dependencies: \
-  /Users/JRod/Desktop/OpenCVTemplate/OpenCV3Import/Normalizer.cpp \
-  /Users/JRod/Desktop/OpenCVTemplate/OpenCV3Import/Normalizer.hpp \
+  /Users/june/Documents/419/419project/OpenCV3Import/Normalizer.cpp \
+  /Users/june/Documents/419/419project/OpenCV3Import/Normalizer.hpp \
   /usr/local/include/GRT/GRT.h \
   /usr/local/include/GRT/Util/GRTVersionInfo.h \
   /usr/local/include/GRT/Util/GRTCommon.h \

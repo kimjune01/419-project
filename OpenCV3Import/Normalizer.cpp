@@ -29,6 +29,7 @@ void Normalizer::normalize(VectorFloat &frames) {
     float minY = minimum(yPositions);
     float maxY = maximum(yPositions);
     float spreadY = maxY - minY;
+    float maxSpread = spreadX > spreadY ? spreadX : spreadY;
     
     std::cout << "minX: "<<minX<< " maxX: " <<maxX<< " minY: " <<minY<< " maxY: " <<maxY<< std::endl;
     
@@ -38,10 +39,10 @@ void Normalizer::normalize(VectorFloat &frames) {
         int yIndex = xIndex + 1;
         int velXIndex = yIndex + 1;
         int velYIndex = velXIndex + 1;
-        frames[xIndex] = (xPositions[i] - minX)/spreadX;
-        frames[yIndex] = (yPositions[i] - minY)/spreadY;
-        frames[velXIndex] = frames[velXIndex] / spreadX;
-        frames[velXIndex] = frames[velYIndex] / spreadY;
+        frames[xIndex] = (xPositions[i] - minX)/maxSpread;
+        frames[yIndex] = (yPositions[i] - minY)/maxSpread;
+        frames[velXIndex] = frames[velXIndex] / maxSpread;
+        frames[velXIndex] = frames[velYIndex] / maxSpread;
     }
     
     // x = x - minX / spreadX

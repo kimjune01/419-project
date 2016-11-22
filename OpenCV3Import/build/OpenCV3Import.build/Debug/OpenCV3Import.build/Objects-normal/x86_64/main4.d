@@ -1,5 +1,5 @@
 dependencies: \
-  /Users/JRod/Desktop/OpenCVTemplate/OpenCV3Import/OpenCV3Import/main4.cpp \
+  /Users/june/Documents/419/419project/OpenCV3Import/OpenCV3Import/main4.cpp \
   /usr/local/include/opencv2/highgui/highgui.hpp \
   /usr/local/include/opencv2/highgui.hpp \
   /usr/local/include/opencv2/core.hpp \
@@ -34,9 +34,7 @@ dependencies: \
   /usr/local/include/opencv2/imgcodecs/imgcodecs_c.h \
   /usr/local/include/opencv2/videoio/videoio_c.h \
   /usr/local/include/opencv2/imgproc/imgproc.hpp \
-  /usr/local/include/opencv2/imgproc.hpp \
-  /Users/JRod/Desktop/OpenCVTemplate/OpenCV3Import/Normalizer.hpp \
-  /usr/local/include/GRT/GRT.h \
+  /usr/local/include/opencv2/imgproc.hpp /usr/local/include/GRT/GRT.h \
   /usr/local/include/GRT/Util/GRTVersionInfo.h \
   /usr/local/include/GRT/Util/GRTCommon.h \
   /usr/local/include/GRT/Util/GRTTypedefs.h \
@@ -189,4 +187,9 @@ dependencies: \
   /usr/local/include/GRT/ClusteringModules/ClusterTree/ClusterTree.h \
   /usr/local/include/GRT/ClusteringModules/ClusterTree/ClusterTreeNode.h \
   /usr/local/include/GRT/ClusteringModules/HierarchicalClustering/HierarchicalClustering.h \
-  /usr/local/include/GRT/ContextModules/Gate.h
+  /usr/local/include/GRT/ContextModules/Gate.h \
+  /Users/june/Documents/419/419project/OpenCV3Import/Normalizer.hpp \
+  /Users/june/Documents/419/419project/OpenCV3Import/OpenCV3Import/XYVV.hpp \
+  /Users/june/Documents/419/419project/OpenCV3Import/OpenCV3Import/SpellEnum.hpp \
+  /Users/june/Documents/419/419project/OpenCV3Import/OpenCV3Import/FileIO.hpp \
+  /Users/june/Documents/419/419project/OpenCV3Import/OpenCV3Import/Constants.hpp

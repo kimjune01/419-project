@@ -3,11 +3,16 @@
 #include <fstream>
 #include "opencv2/highgui/highgui.hpp"
 #include "opencv2/imgproc/imgproc.hpp"
+#include "GRT/GRT.h"
+
 #include <thread>
 #include <chrono>
-#include "Normalizer.hpp"
 
-#include "GRT/GRT.h"
+#include "Normalizer.hpp"
+#include "XYVV.hpp"
+#include "SpellEnum.hpp"
+#include "FileIO.hpp"
+#include "Constants.hpp"
 
 using namespace cv;
 using namespace GRT;
@@ -31,7 +36,6 @@ int iHighS = 255;
 int iLowV = 60;
 int iHighV = 255;
 
-int FRAMES_PER_GESTURE = 100;
 
 Normalizer normalizer;
 
@@ -61,10 +65,6 @@ void capThread2(Mat &imgOriginal) {
     
 }
 
-struct XYVV {
-    float x, y;
-    float velX, velY;
-};
 
 
 const int PAGE_BUFFER_SIZE = 1000;
@@ -97,6 +97,10 @@ int doCapture() {
     bool now_sampling = false;
     
     high_resolution_clock::time_point flopTime = high_resolution_clock::now();
+    
+    
+    FileIO filer;
+    
     
     while (true) {
         
@@ -163,6 +167,10 @@ int doCapture() {
                     frameFloats[baseIndex + 2] = float(posY);
                     frameFloats[baseIndex + 3] = float(iLastX - posX)/float(mSec);
                     frameFloats[baseIndex + 4] = float(iLastY - posY)/float(mSec);
+                    if (baseIndex == 0) {
+                        frameFloats[3] = 0;
+                        frameFloats[baseIndex + 4] = 0;
+                    }
 
                 }
                                 frame_counter++;
@@ -175,22 +183,12 @@ int doCapture() {
                 normalizer.normalize(frameFloats);
                 //foo
                 // start write file
-                ofstream myfile;
-                myfile.open ("training.csv", ios::app);
+                //
                 
-                // format of 1d vector
+                filer.load();
                 
-                for (int i = 0; i < 401; i++) {
+                filer.appendGesture(frameFloats, Pentagram);
                 
-                    myfile << frameFloats[i] << " ";
-                
-                }
-                
-                myfile << endl;
-                    
-                myfile.close();
-                
-               
                 
                 //TODO: clear gesture vector...
             }
@@ -240,7 +238,7 @@ int doCapture() {
 }
 
 
-
+////the real time part...
 int doMagic() {
     
     XYVV frameArray[PAGE_BUFFER_SIZE];
@@ -362,7 +360,6 @@ int doMagic() {
                     inputVector[i*4+3] = frameArray[frame_count-99+i].velY;
                 }
                 
-        
                 
                 /*cout << "Saving data to file\n";
                  if( !gestureData.save("RegressionData.csv") ){
@@ -373,8 +370,7 @@ int doMagic() {
                 
                 
 //                cout << "Frame: " << frame_count << endl;
-            }
-            else if (frame_count == PAGE_BUFFER_SIZE) {
+            } else if (frame_count == PAGE_BUFFER_SIZE) {
                 
                 //copy last FRAMES_PER_GESTURE frames to first part of page buffer and reset...
                 
@@ -467,6 +463,7 @@ int doMagic() {
  
 }
 
+///TRAINER
 int main( int argc, char** argv ) {
     
     if ( !cap.isOpened() ) {
